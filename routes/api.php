@@ -1,6 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\PlaceController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +16,23 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+
+Route::prefix('v1')->group(function () {
+    Route::prefix('auth')->group(function () {
+        Route::post('/login', [UserController::class, 'login']);
+        Route::middleware('ua')->get('/logout', [UserController::class, 'logout']);
+    });
+
+    Route::prefix('place')->group(function () {
+        Route::get('/', [PlaceController::class, 'index']);
+        Route::get('/{place}', [PlaceController::class, 'show']);
+        Route::post('?token={token}', [PlaceController::class, 'store']);
+        Route::delete('/{place}?token={token}', [PlaceController::class, 'destory']);
+        Route::post('/{place}?token={token}', [PlaceController::class, 'update']);
+    });
+
+    Route::prefix('schedule')->group(function () {
+        Route::post('?token={token}', [ScheduleController::class, 'store']);
+        Route::delete('/{schedule}?token={token}', [ScheduleController::class, 'destory']);
+    });
 });
