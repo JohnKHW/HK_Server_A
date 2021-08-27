@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PlaceController;
+use App\Http\Controllers\RouteController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/login', [UserController::class, 'login']);
-        Route::middleware('ua')->get('/logout', [UserController::class, 'logout']);
+        Route::get('/logout', [UserController::class, 'logout']);
     });
 
     Route::prefix('place')->group(function () {
@@ -34,5 +35,9 @@ Route::prefix('v1')->group(function () {
     Route::prefix('schedule')->group(function () {
         Route::post('?token={token}', [ScheduleController::class, 'store']);
         Route::delete('/{schedule}?token={token}', [ScheduleController::class, 'destory']);
+    });
+
+    Route::prefix('route')->group(function () {
+        Route::get('/search/{fromPlace}/{toPlace}/{depTime}', [RouteController::class, 'search']);
     });
 });

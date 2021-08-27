@@ -19,9 +19,10 @@ class UserController extends Controller
                 'message' => 'invalid login'
             ], 401);
         }
+        error_log($user->username);
         $token = UserToken::firstOrCreate([
             'user_id' => $user->id,
-            'token' => md5($user->name)
+            'token' => md5($user->username)
         ]);
 
         return response([

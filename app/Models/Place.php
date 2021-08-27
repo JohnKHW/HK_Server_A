@@ -19,8 +19,13 @@ class Place extends Model
         'description'
     ];
 
-    public function schedules()
+    public function fromSchedules()
     {
-        return $this->hasMany(Schedule::class);
+        return $this->hasMany(Schedule::class, 'from_place_id');
+    }
+
+    public function toScheules()
+    {
+        return $this->hasMany(Schedule::class, 'to_place_id');
     }
 }

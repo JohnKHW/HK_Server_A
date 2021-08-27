@@ -19,10 +19,10 @@ class Schedule extends Model
     ];
 
     public function fromPlace() {
-        return $this->belongsTo(Place::class);
+        return $this->belongsTo(Place::class, 'from_place_id');
     }
 
     public function toPlace() {
-        return $this->belongsTo(Place::class);
+        return $this->belongsTo(Place::class, 'to_place_id');
     }
 }
