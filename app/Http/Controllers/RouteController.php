@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Classes\ShortestPath;
 use App\Models\Place;
 use App\Models\Route;
+use App\Models\Schedule;
 use Illuminate\Http\Request;
+use SebastianBergmann\Environment\Console;
 
 class RouteController extends Controller
 {
@@ -20,7 +22,33 @@ class RouteController extends Controller
         // for ($i = 0; $i < sizeof($schedules); $i++) {
         //     ShortestPath::findShortest($schedules[$i]->toPlace()->first(), $schedules[$i]->arrival_time, $toPlace->id, $set, $result);
         // }
-        ShortestPath::findShortest($fromPlace, $depTime, $toPlace->id, $set, $result);
+        $schedules = Schedule::all();
+        $edges = [];
+        foreach ($schedules as $schedule) {
+            //$deltaTime = strtotime($schedule->arrival_time) - strtotime($schedule->departure_time);
+            array_push($edges[$schedule->from_place_id], $schedule->to_place_id);
+        }
+        $paths = [];
+        $color = [];
+        $queue = [$fromPlace->id];
+        while ($queue != null) {
+            $tempPath = [];
+            $firstSource = array_pop($queue);
+            if (in_array($firstSource, $color)) {
+                continue;
+            }
+            array_push($color, $firstSource);
+            foreach ($edges as $edge) {
+                if ($edge['s'] == $firstSource) {
+                    array_push($tempPath, $edge['d']);
+                    array_push($queue, $edge['d']);
+                }
+            }
+        }
+
+
+        error_log(json_encode($paths));
+        //ShortestPath::findShortest($fromPlace, $depTime, $toPlace->id, $set, $result);
         $result = array_unique($result, SORT_REGULAR);
         sort($result);
         return response([
