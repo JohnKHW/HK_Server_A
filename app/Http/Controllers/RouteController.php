@@ -13,49 +13,63 @@ class RouteController extends Controller
 {
     public function search(Place $fromPlace, Place $toPlace, $depTime)
     {
-        $result = [];
-        $set = [];
-        // $schedules = $fromPlace
-        //     ->fromSchedules()
-        //     ->where('departure_time', '>=', $depTime)
-        //     ->get();
-        // for ($i = 0; $i < sizeof($schedules); $i++) {
-        //     ShortestPath::findShortest($schedules[$i]->toPlace()->first(), $schedules[$i]->arrival_time, $toPlace->id, $set, $result);
-        // }
         $schedules = Schedule::all();
         $edges = [];
         foreach ($schedules as $schedule) {
-            //$deltaTime = strtotime($schedule->arrival_time) - strtotime($schedule->departure_time);
-            array_push($edges[$schedule->from_place_id], $schedule->to_place_id);
-        }
-        $paths = [];
-        $color = [];
-        $queue = [$fromPlace->id];
-        while ($queue != null) {
-            $tempPath = [];
-            $firstSource = array_pop($queue);
-            if (in_array($firstSource, $color)) {
-                continue;
+            if (!array_key_exists($schedule->from_place_id, $edges)) {
+                $edges[$schedule->from_place_id] = [];
             }
-            array_push($color, $firstSource);
-            foreach ($edges as $edge) {
-                if ($edge['s'] == $firstSource) {
-                    array_push($tempPath, $edge['d']);
-                    array_push($queue, $edge['d']);
+            if (!in_array($schedule->to_place_id, $edges[$schedule->from_place_id])) {
+                array_push($edges[$schedule->from_place_id], $schedule->to_place_id);
+            }
+        }
+        //error_log(json_encode($edges));
+        $paths = [];
+        ShortestPath::getPath($paths, $toPlace->id, $edges, $edges[$fromPlace->id], [$fromPlace->id]);
+        error_log(json_encode($paths));
+
+        $availablePaths = [];
+        foreach ($paths as $path) {
+            $isAdd = true;
+            $time = 0;
+            $depTimeCopy = $depTime;
+            for ($i = 0; $i < count($path) - 1; $i++) {
+                $isPath = Schedule::where('from_place_id', $path[$i])
+                    ->where('to_place_id', $path[$i + 1])
+                    ->where('departure_time', '>=', $depTimeCopy)
+                    ->orderBy('arrival_time', 'asc')
+                    ->get();
+                if (sizeof($isPath) <= 0) {
+                    $isAdd = false;
+                    break;
+                } else {
+                    ////////////////////////////////
+                    $depTimeCopy = $isPath[0]->arrival_time;
+                    $oldDepTime = strtotime($isPath[0]->departure_time);
+                    $arrTime = strtotime($depTimeCopy);
+                    $time += ($arrTime - $oldDepTime);
                 }
             }
+            if ($isAdd) {
+                $newPath = [
+                    'path' => $path,
+                    'time' => $time / 60
+                ];
+                array_push($availablePaths, $newPath);
+            }
         }
-
-
-        error_log(json_encode($paths));
-        //ShortestPath::findShortest($fromPlace, $depTime, $toPlace->id, $set, $result);
-        $result = array_unique($result, SORT_REGULAR);
-        sort($result);
+        error_log(json_encode($availablePaths));
+        $result = array_unique($availablePaths, SORT_REGULAR);
+        usort($result, function ($a, $b) {
+            return $a['time']  <=> $b['time'];
+        });
         return response([
-            "fromSchedules" => $fromPlace->fromSchedules()->where('departure_time', '>=', $depTime)->get(),
+            //"fromSchedules" => $fromPlace->fromSchedules()->where('departure_time', '>=', $depTime)->get(),
+            "path" => $paths,
             "result" => $result,
         ], 200);
     }
+
     /**
      * Display a listing of the resource.
      *

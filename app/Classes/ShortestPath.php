@@ -3,67 +3,71 @@
 namespace App\Classes;
 
 use App\Models\Place;
+use App\Models\Schedule;
 use Illuminate\Database\Eloquent\Builder;
 
 class ShortestPath
 {
-    public static function findShortest(Place $place, $depTime, $target, $set, &$result, $time = 0, $route = [])
+    public static function getPath(&$availablePath, $target, $edges, $remainPaths, $throughPath = [])
     {
-        $color = [];
-        $color[$place->id] = 0;
-        $queue = [[$place, $depTime]];
-        $stepNode = [[$place->id]];
-
-        $bfsStep = 1;
-        $tempTotal = 1;
-        $tempEnd = 0;
-        while ($queue != null) {
-            // error_log(json_encode($color));
-            $fromPlace = array_pop($queue)[0];
-            $pathList = ShortestPath::getSchedules($fromPlace, $depTime);
-            $tempTotal = sizeof($pathList);
-            // error_log('tempTotal: ' . $tempTotal);
-
-            for ($i = 0; $i < $tempTotal; $i++) {
-                $newPlace = [$pathList[$i]->toPlace, $pathList[$i]->arrival_time];
-                if (array_key_exists($newPlace[0]->id, $color)) {
-                    continue;
+        foreach ($remainPaths as $path) {
+            if (!in_array($path, $throughPath)) {
+                $newThroughPath = $throughPath;
+                array_push($newThroughPath, $path);
+                if ($path === $target) {
+                    array_push($availablePath, $newThroughPath);
                 }
+                $nextRemainPaths = ShortestPath::remainPaths($throughPath, $edges[$path]);
 
-                array_push($queue, $newPlace);
-                if ($newPlace[0]->id != $target) {
-                    $color[$newPlace[0]->id] = $bfsStep;
+                if (sizeof($remainPaths) > 0) {
+                    ShortestPath::getPath($availablePath, $target, $edges, $nextRemainPaths, $newThroughPath);
                 }
-                $tempStepNode = [];
-                error_log($i . ' ' . sizeof($stepNode[$bfsStep - 1]));
-                for ($j = 0; $j < sizeof($stepNode[$bfsStep - 1]); $j++) {
-                    // error_log(end($stepNode[$bfsStep - 1]));
-                    // error_log($fromPlace->id);
-                    // error_log('aaa ' . (end($stepNode[$bfsStep - 1]) == $fromPlace->id));
-                    $endNode = $stepNode[$bfsStep - 1];
-                    if (end($endNode) == $fromPlace->id) {
-                        array_push($endNode, $newPlace[0]->id);
-                        array_push($tempStepNode, $endNode);
-                        //error_log('tempNode ' . json_encode($endNode));
-                    }
-                }
-                // error_log('New');
-                $stepNode[$bfsStep] = $tempStepNode;
-                $tempEnd = $newPlace[0]->id;
-                // error_log(json_encode($stepNode));
-            }
-            if ($fromPlace->id == $tempEnd) {
-                $bfsStep++;
             }
         }
-        // error_log(json_encode($color));
     }
 
-    public static function getSchedules(Place $depPlace, $depTime)
+    public static function remainPaths($throughPath, $targetsPath)
     {
-        return $depPlace
-            ->fromSchedules()
-            ->where('departure_time', '>=', $depTime)
-            ->get();
+        $newPath = [];
+        foreach ($targetsPath as $path) {
+            if (!in_array($path, $throughPath)) {
+                array_push($newPath, $path);
+            }
+        }
+        return $newPath;
+    }
+
+    public static function getSchedules(&$pathList, $places, $depTime)
+    {
+        $isAdd = true;
+        $time = 0;
+        $depTimeCopy = $depTime;
+        for ($i = 0; $i < count($places) - 1; $i++) {
+            $isPath = Schedule::where('from_place_id', $places[$i])
+                ->where('to_place_id', $places[$i + 1])
+                ->where('departure_time', '>=', $depTimeCopy)
+                ->orderBy('arrival_time', 'asc')
+                ->get();
+            if (sizeof($isPath) <= 0) {
+                $isAdd = false;
+                break;
+            } else {
+                ////////////////////////////////
+                for ($j = 0; $j < count($isPath); $j++) {
+                    ShortestPath::getSchedules($pathList, $places, $depTime)
+                }
+                $depTimeCopy = $isPath[0]->arrival_time;
+                $oldDepTime = strtotime($isPath[0]->departure_time);
+                $arrTime = strtotime($depTimeCopy);
+                $time += ($arrTime - $oldDepTime);
+            }
+        }
+        if ($isAdd) {
+            $newPath = [
+                'path' => $places,
+                'time' => $time / 60
+            ];
+            array_push($pathList, $newPath);
+        }
     }
 }
