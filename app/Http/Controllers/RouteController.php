@@ -5,14 +5,31 @@ namespace App\Http\Controllers;
 use App\Classes\ShortestPath;
 use App\Models\Place;
 use App\Models\Route;
+use App\Models\RouteSchedules;
 use App\Models\Schedule;
+use App\Models\UserToken;
 use Illuminate\Http\Request;
 use SebastianBergmann\Environment\Console;
 
 class RouteController extends Controller
 {
-    public function search(Place $fromPlace, Place $toPlace, $depTime)
+    public function search(Place $fromPlace, Place $toPlace, $depTime, Request $request)
     {
+        $userToken = UserToken::where('token', $request->token)->first();
+
+        if ($userToken == null) {
+            return response([
+                'message' => 'Unauthorized user'
+            ], 401);
+        }
+
+        $route = Route::firstOrCreate([
+            'from_place_id' => $fromPlace->id,
+            'to_place_id' => $toPlace->id,
+            'departure_time' => $depTime,
+        ]);
+        $number_of_history = sizeof($route->users());
+
         $schedules = Schedule::all();
         $edges = [];
         foreach ($schedules as $schedule) {
@@ -23,50 +40,39 @@ class RouteController extends Controller
                 array_push($edges[$schedule->from_place_id], $schedule->to_place_id);
             }
         }
-        //error_log(json_encode($edges));
         $paths = [];
         ShortestPath::getPath($paths, $toPlace->id, $edges, $edges[$fromPlace->id], [$fromPlace->id]);
-        error_log(json_encode($paths));
+        //error_log(json_encode($paths));
 
         $availablePaths = [];
         foreach ($paths as $path) {
-            $isAdd = true;
-            $time = 0;
-            $depTimeCopy = $depTime;
-            for ($i = 0; $i < count($path) - 1; $i++) {
-                $isPath = Schedule::where('from_place_id', $path[$i])
-                    ->where('to_place_id', $path[$i + 1])
-                    ->where('departure_time', '>=', $depTimeCopy)
-                    ->orderBy('arrival_time', 'asc')
-                    ->get();
-                if (sizeof($isPath) <= 0) {
-                    $isAdd = false;
-                    break;
-                } else {
-                    ////////////////////////////////
-                    $depTimeCopy = $isPath[0]->arrival_time;
-                    $oldDepTime = strtotime($isPath[0]->departure_time);
-                    $arrTime = strtotime($depTimeCopy);
-                    $time += ($arrTime - $oldDepTime);
-                }
-            }
-            if ($isAdd) {
-                $newPath = [
-                    'path' => $path,
-                    'time' => $time / 60
-                ];
-                array_push($availablePaths, $newPath);
-            }
+            ShortestPath::getSchedules($availablePaths, $path, $depTime, 0);
         }
-        error_log(json_encode($availablePaths));
         $result = array_unique($availablePaths, SORT_REGULAR);
         usort($result, function ($a, $b) {
-            return $a['time']  <=> $b['time'];
+            return $a['time'] <=> $b['time'];
         });
+        $final = [];
+
+        $route->user()->attach($userToken->user());
+
+        for ($i = 0; $i < 5; $i++) {
+            if ($i >= sizeof($result)) {
+                return;
+            }
+            for ($j = 0; $j < sizeof($result[$i]['path']); $j++) {
+                RouteSchedules::firstOrCreate([
+                    'route_id' => $route->id,
+                    'schedule_id' => $result[$i]['path'][$j],
+                    'step' => $j,
+                    'rank' => $i
+                ]);
+            }
+            array_push($final, $result[$i]['path']);
+        }
         return response([
-            //"fromSchedules" => $fromPlace->fromSchedules()->where('departure_time', '>=', $depTime)->get(),
-            "path" => $paths,
-            "result" => $result,
+            'number_of_history' => $number_of_history,
+            "schedules" => $final,
         ], 200);
     }
 

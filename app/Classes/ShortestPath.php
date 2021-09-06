@@ -36,38 +36,45 @@ class ShortestPath
         }
         return $newPath;
     }
-
-    public static function getSchedules(&$pathList, $places, $depTime)
+    // availablePaths = final result
+    // places = all point of this path
+    // depTime = start time of the place
+    // placeId = current place index
+    public static function getSchedules(&$availablePaths, $places, $depTime, $placeIdx, $wholeSchdules = [])
     {
-        $isAdd = true;
-        $time = 0;
-        $depTimeCopy = $depTime;
-        for ($i = 0; $i < count($places) - 1; $i++) {
-            $isPath = Schedule::where('from_place_id', $places[$i])
-                ->where('to_place_id', $places[$i + 1])
-                ->where('departure_time', '>=', $depTimeCopy)
+        if ($placeIdx < sizeof($places) - 1) {
+            $fromPlace = $places[$placeIdx];
+            $toPlace = $places[$placeIdx + 1];
+            $schedules = Schedule::with('fromPlace', 'toPlace')
+                ->where('from_place_id', $fromPlace)
+                ->where('to_place_id', $toPlace)
+                ->where('departure_time', '>=', $depTime)
                 ->orderBy('arrival_time', 'asc')
                 ->get();
-            if (sizeof($isPath) <= 0) {
-                $isAdd = false;
-                break;
-            } else {
-                ////////////////////////////////
-                for ($j = 0; $j < count($isPath); $j++) {
-                    ShortestPath::getSchedules($pathList, $places, $depTime)
-                }
-                $depTimeCopy = $isPath[0]->arrival_time;
-                $oldDepTime = strtotime($isPath[0]->departure_time);
-                $arrTime = strtotime($depTimeCopy);
-                $time += ($arrTime - $oldDepTime);
+            if (sizeof($schedules) == 0) {
+                return;
             }
-        }
-        if ($isAdd) {
+            foreach ($schedules as $schedule) {
+                $nextDepTime = $schedule->arrival_time;
+                $newWholeSchdules = $wholeSchdules;
+                $schedule->fromPlace();
+                $schedule->toPlace();
+                unset($schedule['from_place_id']);
+                unset($schedule['to_place_id']);
+                $startTime = strtotime($schedule->departure_time);
+                $endTime = strtotime($schedule->arrival_time);
+                $schedule['travel_time'] = date('i:s', $endTime - $startTime);
+                array_push($newWholeSchdules, $schedule);
+                ShortestPath::getSchedules($availablePaths, $places, $nextDepTime, $placeIdx + 1, $newWholeSchdules);
+            }
+        } else if ($placeIdx < sizeof($places)) {
+            $lastSchedule = end($wholeSchdules);
+
             $newPath = [
-                'path' => $places,
-                'time' => $time / 60
+                'path' => $wholeSchdules,
+                'time' => $lastSchedule->arrival_time
             ];
-            array_push($pathList, $newPath);
+            array_push($availablePaths, $newPath);
         }
     }
 }

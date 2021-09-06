@@ -15,4 +15,9 @@ class User extends Model
     {
         return $this->hasMany(UserToken::class);
     }
+
+    public function routes()
+    {
+        return $this->belongsToMany(Route::class, 'user_routes', 'route_id', 'user_id');
+    }
 }

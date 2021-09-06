@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateRoutesTable extends Migration
+class CreateUserRoutesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,11 @@ class CreateRoutesTable extends Migration
      */
     public function up()
     {
-        Schema::create('routes', function (Blueprint $table) {
+        Schema::create('user_routes', function (Blueprint $table) {
             $table->id();
-            $table->time('departure_time');
-            $table->foreign('from_place_id')->references('id')->on('places');
-            $table->foreign('to_place_id')->references('id')->on('places');
+            $table->foreignId('user_id')->constrained();
+            $table->foreignId('route_id')->constrained();
+            $table->timestamps();
         });
     }
 
@@ -28,6 +28,6 @@ class CreateRoutesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('routes');
+        Schema::dropIfExists('user_routes');
     }
 }
