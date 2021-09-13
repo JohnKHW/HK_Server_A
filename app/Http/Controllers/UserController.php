@@ -13,13 +13,11 @@ class UserController extends Controller
         $user = User::where('username', $request->username)
             ->where('password', $request->password)
             ->first();
-
         if (!$user) {
             return response([
                 'message' => 'invalid login'
             ], 401);
         }
-        error_log($user->username);
         $token = UserToken::firstOrCreate([
             'user_id' => $user->id,
             'token' => md5($user->username)
@@ -34,7 +32,7 @@ class UserController extends Controller
     public function logout(Request $request)
     {
         $userToken = UserToken::where('token', $request->token)->first();
-        
+
         if ($userToken == null) {
             return response([
                 'message' => 'Unauthorized user'
@@ -47,5 +45,4 @@ class UserController extends Controller
             'message' => 'logout success'
         ], 200);
     }
-
 }

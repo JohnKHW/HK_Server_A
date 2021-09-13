@@ -23,12 +23,12 @@ class RouteController extends Controller
             ], 401);
         }
 
-        $route = Route::firstOrCreate([
+        $number_of_history = Route::firstOrCreate([
             'from_place_id' => $fromPlace->id,
             'to_place_id' => $toPlace->id,
-            'departure_time' => $depTime,
-        ]);
-        $number_of_history = sizeof($route->users());
+        ])->users->count();
+
+        error_log(json_encode($number_of_history));
 
         $schedules = Schedule::all();
         $edges = [];
@@ -42,7 +42,6 @@ class RouteController extends Controller
         }
         $paths = [];
         ShortestPath::getPath($paths, $toPlace->id, $edges, $edges[$fromPlace->id], [$fromPlace->id]);
-        //error_log(json_encode($paths));
 
         $availablePaths = [];
         foreach ($paths as $path) {
@@ -54,19 +53,9 @@ class RouteController extends Controller
         });
         $final = [];
 
-        $route->user()->attach($userToken->user());
-
         for ($i = 0; $i < 5; $i++) {
             if ($i >= sizeof($result)) {
                 return;
-            }
-            for ($j = 0; $j < sizeof($result[$i]['path']); $j++) {
-                RouteSchedules::firstOrCreate([
-                    'route_id' => $route->id,
-                    'schedule_id' => $result[$i]['path'][$j],
-                    'step' => $j,
-                    'rank' => $i
-                ]);
             }
             array_push($final, $result[$i]['path']);
         }
@@ -76,79 +65,36 @@ class RouteController extends Controller
         ], 200);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function selection(Request $request)
     {
-        //
-    }
+        $userToken = UserToken::where('token', $request->input('token'))->first();
+        error_log($userToken);
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
+        if ($userToken == null) {
+            return response([
+                'message' => 'Unauthorized user'
+            ], 401);
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $route = Route::firstOrCreate([
+            'from_place_id' => $request->from_place_id,
+            'to_place_id' => $request->to_place_id,
+        ]);
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Route  $route
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Route $route)
-    {
-        //
-    }
+        $route->users()->sync($userToken->user);
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Route  $route
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Route $route)
-    {
-        //
-    }
+        $schedules = $request->schedule_id;
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Route  $route
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Route $route)
-    {
-        //
-    }
+        for ($i = 0; $i < sizeof($schedules); $i++) {
+            RouteSchedules::firstOrCreate([
+                'route_id' => $route->id,
+                'schedule_id' => $schedules[$i],
+                'step' => $i,
+            ]);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Route  $route
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Route $route)
-    {
-        //
+        return response([
+            'message' => 'create success'
+        ], 200);
     }
 }

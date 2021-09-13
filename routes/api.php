@@ -39,5 +39,6 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('route')->group(function () {
         Route::get('/search/{fromPlace}/{toPlace}/{depTime}', [RouteController::class, 'search']);
+        Route::post('/selection', [RouteController::class, 'selection']);
     });
 });

@@ -9,7 +9,7 @@ class RouteSchedules extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['route_id', 'schedule_id', 'step', 'rank'];
+    protected $fillable = ['route_id', 'schedule_id', 'step'];
 
     public function route()
     {

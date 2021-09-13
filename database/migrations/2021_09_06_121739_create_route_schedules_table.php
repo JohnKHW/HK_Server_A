@@ -18,7 +18,7 @@ class CreateRouteSchedulesTable extends Migration
             $table->foreignId('route_id')->constrained();
             $table->foreignId('schedule_id')->constrained();
             $table->integer('step');
-            $table->integer('rank');
+            $table->timestamps();
         });
     }
 

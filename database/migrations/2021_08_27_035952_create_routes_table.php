@@ -15,9 +15,11 @@ class CreateRoutesTable extends Migration
     {
         Schema::create('routes', function (Blueprint $table) {
             $table->id();
-            $table->time('departure_time');
+            $table->unsignedBigInteger('from_place_id');
+            $table->unsignedBigInteger('to_place_id');
             $table->foreign('from_place_id')->references('id')->on('places');
             $table->foreign('to_place_id')->references('id')->on('places');
+            $table->timestamps();
         });
     }
 
