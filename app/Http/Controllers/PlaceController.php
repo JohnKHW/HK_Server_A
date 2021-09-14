@@ -23,9 +23,9 @@ class PlaceController extends Controller
         return response($places, 200);
     }
 
-    public function store(Request $request, $token)
+    public function store(Request $request)
     {
-        $user = UserToken::where('token', $token)->user();
+        $user = UserToken::where('token', $request->input('token'))->user();
         if (!$user || $user->role != 'ADMIN') {
             return response([
                 'message' => 'Unauthorized user'
@@ -53,9 +53,9 @@ class PlaceController extends Controller
         }
     }
 
-    public function show(Place $place, $token)
+    public function show(Place $place, Request $request)
     {
-        $userToken = UserToken::where('token', $token);
+        $userToken = UserToken::where('token', $request->input('token'));
 
         if (!$userToken) {
             return response([
@@ -90,9 +90,9 @@ class PlaceController extends Controller
         }
     }
 
-    public function destroy(Place $place, $token)
+    public function destroy(Place $place, Request $request)
     {
-        $user = UserToken::where('token', $token)->user();
+        $user = UserToken::where('token', $request->input('token'))->user();
         if (!$user || $user->role != 'ADMIN') {
             return response([
                 'message' => 'Unauthorized user'

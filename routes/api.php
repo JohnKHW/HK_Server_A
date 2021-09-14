@@ -19,16 +19,16 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::prefix('v1')->group(function () {
-    Route::prefix('auth')->group(function () {
+    Route::prefix('/auth')->group(function () {
         Route::post('/login', [UserController::class, 'login']);
         Route::get('/logout', [UserController::class, 'logout']);
     });
 
     Route::prefix('place')->group(function () {
         Route::get('/', [PlaceController::class, 'index']);
+        Route::post('', [PlaceController::class, 'store']);
         Route::get('/{place}', [PlaceController::class, 'show']);
-        Route::post('?token={token}', [PlaceController::class, 'store']);
-        Route::delete('/{place}?token={token}', [PlaceController::class, 'destory']);
+        Route::delete('/{place}', [PlaceController::class, 'destory']);
         Route::post('/{place}?token={token}', [PlaceController::class, 'update']);
     });
 
