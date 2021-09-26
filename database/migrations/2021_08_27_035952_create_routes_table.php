@@ -17,8 +17,8 @@ class CreateRoutesTable extends Migration
             $table->id();
             $table->unsignedBigInteger('from_place_id');
             $table->unsignedBigInteger('to_place_id');
-            $table->foreign('from_place_id')->references('id')->on('places');
-            $table->foreign('to_place_id')->references('id')->on('places');
+            $table->foreign('from_place_id')->references('id')->on('places')->cascadeOnDelete();
+            $table->foreign('to_place_id')->references('id')->on('places')->cascadeOnDelete();
             $table->timestamps();
         });
     }

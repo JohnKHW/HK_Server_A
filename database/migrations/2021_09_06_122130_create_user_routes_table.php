@@ -15,8 +15,8 @@ class CreateUserRoutesTable extends Migration
     {
         Schema::create('user_routes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('route_id')->constrained();
+            $table->foreignId('user_id')->cascadeOnDelete();
+            $table->foreignId('route_id')->cascadeOnDelete();
         });
     }
 

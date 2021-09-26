@@ -23,9 +23,9 @@ class CreateSchedulesTable extends Migration
             $table->time('arrival_time');
             $table->integer('distance');
             $table->integer('speed');
-            $table->enum('status', ['AVAILABLE','UNAVAILABLE'])->default('AVAILABLE')->nullable();
-            $table->foreign('from_place_id')->references('id')->on('places');
-            $table->foreign('to_place_id')->references('id')->on('places');
+            $table->enum('status', ['AVAILABLE', 'UNAVAILABLE'])->default('AVAILABLE')->nullable();
+            $table->foreign('from_place_id')->references('id')->on('places')->cascadeOnDelete();
+            $table->foreign('to_place_id')->references('id')->on('places')->cascadeOnDelete();
         });
     }
 

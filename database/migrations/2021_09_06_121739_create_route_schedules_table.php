@@ -15,8 +15,8 @@ class CreateRouteSchedulesTable extends Migration
     {
         Schema::create('route_schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('route_id')->constrained();
-            $table->foreignId('schedule_id')->constrained();
+            $table->foreignId('route_id')->cascadeOnDelete();
+            $table->foreignId('schedule_id')->cascadeOnDelete();
             $table->integer('step');
             $table->timestamps();
         });

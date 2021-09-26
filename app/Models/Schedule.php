@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Schedule extends Model
 {
     use HasFactory;
-
+    public $timestamps = false;
     protected $fillable = [
         'from_place_id',
         'to_place_id',
@@ -18,11 +18,13 @@ class Schedule extends Model
         'speed'
     ];
 
-    public function fromPlace() {
+    public function fromPlace()
+    {
         return $this->belongsTo(Place::class, 'from_place_id');
     }
 
-    public function toPlace() {
+    public function toPlace()
+    {
         return $this->belongsTo(Place::class, 'to_place_id');
     }
 }

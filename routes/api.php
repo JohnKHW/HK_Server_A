@@ -24,17 +24,17 @@ Route::prefix('v1')->group(function () {
         Route::get('/logout', [UserController::class, 'logout']);
     });
 
-    Route::prefix('place')->group(function () {
+    Route::prefix('/place')->group(function () {
         Route::get('/', [PlaceController::class, 'index']);
         Route::post('', [PlaceController::class, 'store']);
         Route::get('/{place}', [PlaceController::class, 'show']);
-        Route::delete('/{place}', [PlaceController::class, 'destory']);
-        Route::post('/{place}?token={token}', [PlaceController::class, 'update']);
+        Route::delete('/{place}', [PlaceController::class, 'destroy']);
+        Route::put('/{place}', [PlaceController::class, 'update']);
     });
 
-    Route::prefix('schedule')->group(function () {
-        Route::post('?token={token}', [ScheduleController::class, 'store']);
-        Route::delete('/{schedule}?token={token}', [ScheduleController::class, 'destory']);
+    Route::prefix('/schedule')->group(function () {
+        Route::post('', [ScheduleController::class, 'store']);
+        Route::delete('/{schedule}', [ScheduleController::class, 'destroy']);
     });
 
     Route::prefix('route')->group(function () {

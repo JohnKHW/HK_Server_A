@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
-    public function store(Request $request, $token)
+    public function store(Request $request)
     {
-        $user = UserToken::where('token', $token)->user();
+        $user = UserToken::where('token', $request->input('token'))->first()->user;
         if (!$user || $user->role != 'ADMIN') {
             return response([
                 'message' => 'Unauthorized user'
@@ -37,16 +37,17 @@ class ScheduleController extends Controller
         }
     }
 
-    public function destroy(Schedule $schedule, $token)
+    public function destroy(Schedule $schedule, Request $request)
     {
-        $user = UserToken::where('token', $token)->user();
+        error_log('ok');
+        $user = UserToken::where('token', $request->input('token'))->first()->user;
         if (!$user || $user->role != 'ADMIN') {
             return response([
                 'message' => 'Unauthorized user'
             ], 401);
         }
 
-        if($schedule->delete()) {
+        if ($schedule->delete()) {
             return response([
                 'message' => 'delete success'
             ], 200);

@@ -4,19 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Place;
 use App\Models\UserToken;
+use Error;
 use Illuminate\Http\Request;
 
 class PlaceController extends Controller
 {
     public function index(Request $request)
     {
-        $userToken = UserToken::where('token', $request->token)->first();
+        // $userToken = UserToken::where('token', $request->token)->first();
 
-        if ($userToken == null) {
-            return response([
-                'message' => 'Unauthorized user'
-            ], 401);
-        }
+        // if ($userToken == null) {
+        //     return response([
+        //         'message' => 'Unauthorized user'
+        //     ], 401);
+        // }
 
         $places = Place::all();
 
@@ -25,24 +26,30 @@ class PlaceController extends Controller
 
     public function store(Request $request)
     {
-        $user = UserToken::where('token', $request->input('token'))->user();
+        $user = UserToken::where('token', $request->input('token'))->first()->user;
         if (!$user || $user->role != 'ADMIN') {
             return response([
                 'message' => 'Unauthorized user'
             ], 401);
         }
 
-        $validated = $request->validate([
-            'name' => 'required',
-            'latitude' => 'required',
-            'longitude' => 'required',
-            'x' => 'required',
-            'y' => 'required',
-            'image' => 'required',
-            'description' => 'required',
+        // $validated = $request->validate([
+        //     'name' => 'required',
+        //     'latitude' => 'required',
+        //     'longitude' => 'required',
+        //     // 'x' => 'required',
+        //     // 'y' => 'required',
+        //     'image' => 'required',
+        //     'description' => 'required',
+        // ]);
+        $place = Place::create([
+            'name' => $request->input('name'),
+            'latitude' => $request->input('latitude'),
+            'longitude' => $request->input('longitude'),
+            'image' => $request->input('image'),
+            'description' => $request->input('description'),
         ]);
-
-        if (Place::create($validated)) {
+        if ($place) {
             return response([
                 'message' => 'create success'
             ], 200);
@@ -68,9 +75,9 @@ class PlaceController extends Controller
         ], 200);
     }
 
-    public function update(Request $request, Place $place, $token)
+    public function update(Request $request, Place $place)
     {
-        $user = UserToken::where('token', $token)->user();
+        $user = UserToken::where('token', $request->input('token'))->first()->user;
         if (!$user || $user->role != 'ADMIN') {
             return response([
                 'message' => 'Unauthorized user'
@@ -92,7 +99,8 @@ class PlaceController extends Controller
 
     public function destroy(Place $place, Request $request)
     {
-        $user = UserToken::where('token', $request->input('token'))->user();
+        error_log(UserToken::where('token', $request->input('token'))->first());
+        $user = UserToken::where('token', $request->input('token'))->first()->user;
         if (!$user || $user->role != 'ADMIN') {
             return response([
                 'message' => 'Unauthorized user'
