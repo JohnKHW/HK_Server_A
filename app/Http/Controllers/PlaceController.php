@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Place\StoreRequest;
 use App\Models\Place;
 use App\Models\UserToken;
 use Error;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PlaceController extends Controller
 {
@@ -24,7 +26,7 @@ class PlaceController extends Controller
         return response($places, 200);
     }
 
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
         $user = UserToken::where('token', $request->input('token'))->first()->user;
         if (!$user || $user->role != 'ADMIN') {
@@ -42,11 +44,15 @@ class PlaceController extends Controller
         //     'image' => 'required',
         //     'description' => 'required',
         // ]);
+        $image_path = $request->image->getClientOriginalName();
+        //Store file into storage path
+        $path = $request->image->storeAs('public', $image_path);
+        error_log(asset(Storage::url($path)));
         $place = Place::create([
             'name' => $request->input('name'),
             'latitude' => $request->input('latitude'),
             'longitude' => $request->input('longitude'),
-            'image' => $request->input('image'),
+            'image_path' => $image_path,
             'description' => $request->input('description'),
         ]);
         if ($place) {

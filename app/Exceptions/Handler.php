@@ -35,7 +35,15 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-            //
+            
+        });
+        $this->reportable(function (NotAuthorizedException $e) {
+            error_log($e->getMessage());
+            return response()->json([
+                'message' => 'Record not found.'
+            ], 404);
+            return parent::render([], $e);
+            return response($e->getMessage(), 401);
         });
     }
 }

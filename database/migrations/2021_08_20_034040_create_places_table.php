@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use phpDocumentor\Reflection\Types\Nullable;
 
 class CreatePlacesTable extends Migration
 {
@@ -18,8 +19,8 @@ class CreatePlacesTable extends Migration
             $table->string('name');
             $table->double('latitude');
             $table->double('longitude');
-            $table->double('x');
-            $table->double('y');
+            $table->double('x')->nullable();
+            $table->double('y')->nullable();
             $table->string('image_path');
             $table->text('description')->nullable();
         });
