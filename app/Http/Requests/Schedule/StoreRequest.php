@@ -32,8 +32,8 @@ class StoreRequest extends FormRequest
             'to_place_id' => 'required|exists:places,id',
             'departure_time' => 'required',
             'arrival_time' => 'required',
-            'distance' => 'required',
-            'speed' => 'required',
+            'distance' => 'required|digits',
+            'speed' => 'required|digits',
         ];
     }
 

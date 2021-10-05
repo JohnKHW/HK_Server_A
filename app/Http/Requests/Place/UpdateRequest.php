@@ -29,8 +29,8 @@ class UpdateRequest extends FormRequest
     {
         return [
             'name' => 'nullable',
-            'latitude' => 'nullable',
-            'longitude' => 'nullable',
+            'latitude' => 'nullable|digits',
+            'longitude' => 'nullable|digits',
             'image' => 'nullable|file',
             'description' => 'nullable',
         ];

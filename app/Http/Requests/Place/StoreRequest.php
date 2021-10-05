@@ -30,8 +30,8 @@ class StoreRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'latitude' => 'required',
-            'longitude' => 'required',
+            'latitude' => 'required|digits',
+            'longitude' => 'required|digits',
             'image' => 'required|file',
             'description' => 'nullable',
         ];
