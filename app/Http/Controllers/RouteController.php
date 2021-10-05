@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Classes\ShortestPath;
+use App\Http\Requests\Route\SelectionRequest;
 use App\Models\Place;
 use App\Models\Route;
 use App\Models\RouteSchedules;
@@ -65,7 +66,7 @@ class RouteController extends Controller
         ], 200);
     }
 
-    public function selection(Request $request)
+    public function selection(SelectionRequest $request)
     {
         $userToken = UserToken::where('token', $request->input('token'))->first();
         error_log($userToken);
@@ -83,7 +84,13 @@ class RouteController extends Controller
 
         $route->users()->sync($userToken->user);
 
-        $schedules = $request->schedule_id;
+        $schedules = [];
+
+        if (is_array($request->schedule_id)) {
+            $schedules = $request->schedule_id;
+        } else {
+            array_push($schedules, $request->schedule_id);
+        }
 
         for ($i = 0; $i < sizeof($schedules); $i++) {
             RouteSchedules::firstOrCreate([

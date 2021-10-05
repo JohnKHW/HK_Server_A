@@ -2,14 +2,12 @@
 
 namespace App\Http\Requests\Place;
 
-use App\Exceptions\NotAuthorizedException;
 use App\Models\UserToken;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\Response;
 
-class StoreRequest extends FormRequest
+class DestroyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -29,20 +27,29 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required',
-            'latitude' => 'required',
-            'longitude' => 'required',
-            'image' => 'required|file',
-            'description' => 'nullable',
+            //
         ];
     }
+    public function validateResolved()
+    {
+        $this->prepareForValidation();
 
+        if (!$this->passesAuthorization()) {
+            $this->failedAuthorization();
+        }
+
+        $instance = $this->getValidatorInstance();
+
+        if ($instance->fails()) {
+            $this->failedValidation($instance);
+        }
+    }
     public function failedAuthorization()
     {
         throw new HttpResponseException(response(['message' => 'Unauthorized user'], 401));
     }
     protected function failedValidation(Validator $validator)
     {
-        throw new HttpResponseException(response(['message' => 'Data cannot be processed'], 422));
+        throw new HttpResponseException(response(['message' => 'Data cannot be deleted'], 422));
     }
 }

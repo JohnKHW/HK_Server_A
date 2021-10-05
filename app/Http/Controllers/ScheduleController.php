@@ -2,20 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Schedule\DestroyRequest;
+use App\Http\Requests\Schedule\StoreRequest;
 use App\Models\Schedule;
 use App\Models\UserToken;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
-        $user = UserToken::where('token', $request->input('token'))->first()->user;
-        if (!$user || $user->role != 'ADMIN') {
-            return response([
-                'message' => 'Unauthorized user'
-            ], 401);
-        }
 
         $validated = $request->validate([
             'from_place_id' => 'required',
@@ -37,24 +33,11 @@ class ScheduleController extends Controller
         }
     }
 
-    public function destroy(Schedule $schedule, Request $request)
+    public function destroy(Schedule $schedule, DestroyRequest $request)
     {
-        error_log('ok');
-        $user = UserToken::where('token', $request->input('token'))->first()->user;
-        if (!$user || $user->role != 'ADMIN') {
-            return response([
-                'message' => 'Unauthorized user'
-            ], 401);
-        }
-
-        if ($schedule->delete()) {
-            return response([
-                'message' => 'delete success'
-            ], 200);
-        } else {
-            return response([
-                'message' => 'Data cannot be deleted'
-            ], 400);
-        }
+        $schedule->delete();
+        return response([
+            'message' => 'delete success'
+        ], 200);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -37,13 +39,6 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             
         });
-        $this->reportable(function (NotAuthorizedException $e) {
-            error_log($e->getMessage());
-            return response()->json([
-                'message' => 'Record not found.'
-            ], 404);
-            return parent::render([], $e);
-            return response($e->getMessage(), 401);
-        });
     }
+
 }
