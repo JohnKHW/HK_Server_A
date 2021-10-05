@@ -28,7 +28,12 @@ Route::prefix('v1')->group(function () {
     Route::prefix('/place')->group(function () {
         Route::get('/', [PlaceController::class, 'index']);
         Route::post('', [PlaceController::class, 'store']);
-        Route::get('/{place}', [PlaceController::class, 'show']);
+        Route::get('/{place}', [PlaceController::class, 'show'])
+            ->missing(function () {
+                return  response([
+                    'message' => 'Data cannot be processed'
+                ], 400);
+            });
         Route::delete('/{place}', [PlaceController::class, 'destroy'])
             ->missing(function () {
                 return  response([

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Place\DestroyRequest;
+use App\Http\Requests\Place\IndexRequest;
+use App\Http\Requests\Place\ShowRequest;
 use App\Http\Requests\Place\StoreRequest;
 use App\Http\Requests\Place\UpdateRequest;
 use App\Models\Place;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PlaceController extends Controller
 {
-    public function index(Request $request)
+    public function index(IndexRequest $request)
     {
         $places = Place::all();
 
@@ -38,16 +40,8 @@ class PlaceController extends Controller
         ], 200);
     }
 
-    public function show(Place $place, Request $request)
+    public function show(Place $place, ShowRequest $request)
     {
-        $userToken = UserToken::where('token', $request->input('token'));
-
-        if (!$userToken) {
-            return response([
-                'message' => 'Unauthorized user'
-            ], 401);
-        }
-
         return response([
             $place
         ], 200);
